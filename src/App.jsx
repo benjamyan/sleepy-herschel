@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useSelector } from "react-redux";
 import { addItemGroup, selectItemGroupIds } from "./itemGroupSlice";
 import { ItemGroup } from "./ItemGroup";
@@ -6,7 +7,7 @@ import { useDispatch } from "react-redux";
 export const App = () => {
   const dispatch = useDispatch();
   const itemGroupIds = useSelector(selectItemGroupIds);
-  const itemGroups = itemGroupIds.map((id) => <ItemGroup key={id} id={id} />);
+  const itemGroups = itemGroupIds.map((id) => <ItemGroup key={id} id={id} />)
 
   return (
     <div className="app">
