@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useSelector } from "react-redux";
 import { addItemGroup, selectItemGroupIds } from "./itemGroupSlice";
 import { ItemGroup } from "./ItemGroup";

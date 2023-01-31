@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { createSelector } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CalculationTypes,
-  expensiveDerivedValueSelector,
+  selectExpensiveDerivedValue,
   selectItemGroupById,
-  setCalculationType
+  setCalculationType,
+  selectIdOfLargestItemGroup
 } from "./itemGroupSlice";
 import { addItem } from "./actions";
 import { Item } from "./Item";
@@ -23,14 +25,46 @@ const SuperfluousInputElement = ()=> {
 
 export const ItemGroup = ({ id }) => {
   const dispatch = useDispatch();
-  const { type, items } = useSelector((state) => selectItemGroupById(state, id));
 
-  // FIXME: This expensive value is derived every render, even when not necessary!
-  const derivedValue = useSelector(
-    /** Pass in the ID value here for comparison checks on the memozied selector */
-    (state) => expensiveDerivedValueSelector(state, { type, items, id })
+
+  /** 
+   * Managing components that are calling a selector and using its store state. 
+   * use `createSelector` to have a central point that can be called, 
+   * avoiding continuous state updates from when multiple components are mounted/rendered
+   * @see https://github.com/reduxjs/reselect#createselectorinputselectors--inputselectors-resultfunc-selectoroptions 
+   * */
+  const itemGroupSelector = createSelector(
+    [
+      (state)=> ({state, ...selectItemGroupById(state, id)})
+    ],
+    (itemGroupEntry)=> ({
+      ...itemGroupEntry,
+      externalMutation: selectIdOfLargestItemGroup(itemGroupEntry.state) === id
+    }),
+    {
+      memoizeOptions: {
+        maxSize: 2,
+        equalityCheck: (prevValue, nextValue) => {
+          if (prevValue.items.length !== nextValue.items.length) {
+            return false
+          }
+          if (prevValue.type !== nextValue.type) {
+            return false
+          }
+          if (selectIdOfLargestItemGroup(prevValue.state) !== selectIdOfLargestItemGroup(nextValue.state)) {
+            return false
+          }
+          return true
+        }
+      }
+    }
   );
-
+  const { type, items, externalMutation, state } = useSelector(itemGroupSelector);
+  
+  const derivedValue = React.useMemo(
+    ()=> selectExpensiveDerivedValue(state, { type, items, id }),
+    [ type, items, externalMutation ]
+  );
   const renderedItems = items.map((id) => <Item key={id} id={id} />);
   
   const typeOptions = Object.values(CalculationTypes).map((type) => (
@@ -55,8 +89,8 @@ export const ItemGroup = ({ id }) => {
       </div>
 
       <SuperfluousInputElement />
-
-      <div>Derived value: {derivedValue}</div>
+      
+      { derivedValue }
       <div className="items">
         <h4>Items</h4>
         {renderedItems}
