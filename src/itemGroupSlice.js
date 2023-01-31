@@ -24,8 +24,7 @@ export const selectIdOfLargestItemGroup = (state) => {
 // Let's pretend that the operations involved here are actually "expensive".
 // FIXME: We want to avoid recomputing this when it is not necessary.
 export const selectExpensiveDerivedValue = (state, {type, items, id}) => {
-  // console.log("Calculating derived value.");
-  console.log(`Calculating ${id}`);
+  console.log(`Calculating derived value on ${id}`);
   
   switch (type) {
     // Return items in a list format (order: as-is)
