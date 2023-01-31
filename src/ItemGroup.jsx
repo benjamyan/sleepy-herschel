@@ -60,11 +60,27 @@ export const ItemGroup = ({ id }) => {
     }
   );
   const { type, items, externalMutation, state } = useSelector(itemGroupSelector);
+
+  const expensiveSelectorCall = createSelector(
+    [
+      ()=>({ state, type, externalMutation, items, id })
+    ],
+    ({state, type, items})=> (
+      selectExpensiveDerivedValue(state, { type, items, id })
+    ),
+    {
+      memoizeOptions: {
+        equalityCheck: (prev, next)=> {
+          if (prev.externalMutation !== next.externalMutation) {
+            return false
+          }
+          return true
+        }
+      }
+    }
+  )
+  const derivedValue = useSelector(expensiveSelectorCall);
   
-  const derivedValue = React.useMemo(
-    ()=> selectExpensiveDerivedValue(state, { type, items, id }),
-    [ type, items, externalMutation ]
-  );
   const renderedItems = items.map((id) => <Item key={id} id={id} />);
   
   const typeOptions = Object.values(CalculationTypes).map((type) => (
